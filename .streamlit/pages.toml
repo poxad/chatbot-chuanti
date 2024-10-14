@@ -1,0 +1,21 @@
+[[pages]]
+path = "Home_Page.py"
+name = "Home"
+icon = "🏠"
+
+[[pages]]
+path = "Chatbot.py"
+name = "Chatbot"
+icon = "🤖"
+
+[[pages]]
+path = "Quiz.py"
+name = "DS Quiz"
+icon = "❓"
+
+[[pages]]
+path = "Admin_Panel.py"
+name = "Admin Panel"
+icon = "🛠️"
+
+

@@ -1,0 +1,15 @@
+[theme]
+primaryColor="#877e7e"
+backgroundColor="#121212"
+secondaryBackgroundColor="#1e1e1e"
+textColor="#e0e0e0"
+font="serif"
+
+
+
+[server]
+enableXsrfProtection = false
+enableCORS = false
+
+[client]
+showSidebarNavigation = true
