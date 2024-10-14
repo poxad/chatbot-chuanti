@@ -35,7 +35,7 @@ pip install -r requirements.txt
 
 2. Run the Streamlit server:
 ```
-streamlit run Home_Page.py
+streamlit run app.py
 ```
 
 3. Access the application in your browser
