@@ -9,11 +9,12 @@ from langchain_openai import ChatOpenAI
 from langchain_core.documents import Document
 from openai import OpenAI
 
-os.environ["OPENAI_API_KEY"] = 'sk-proj-MVeDAvFcYNwaNqk0T0DlT3BlbkFJOomx2zVDPhGc7xi5TFDC'
+load_dotenv()
 
-os.environ["NEO4J_URI"] = "neo4j+s://aaa02e5d.databases.neo4j.io"
-os.environ["NEO4J_USERNAME"] = "neo4j"
-os.environ["NEO4J_PASSWORD"] = "ptq-UUpUJlGSxDvZNAG9sugGCCd09d-rByfMwsQZUIk"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+NEO4J_URI = os.getenv("NEO4J_URI")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 # If error here, need to start database first : https://console.neo4j.io/?product=aura-db&tenant=2f27695c-4050-43d8-99fa-40642e452dea#databases
 graph = Neo4jGraph()
