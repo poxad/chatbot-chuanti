@@ -1,7 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import yaml
-import streamlit_authenticator as stauth
 import streamlit as st
 from yaml.loader import SafeLoader
 from st_pages import add_page_title, get_nav_from_toml

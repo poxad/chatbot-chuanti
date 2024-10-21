@@ -12,3 +12,4 @@ streamlit_option_menu
 pdf2image
 faiss-cpu
 st-pages
+openai==0.28

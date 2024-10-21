@@ -5,8 +5,13 @@ icon = "🏠"
 
 [[pages]]
 path = "Chatbot.py"
-name = "Chatbot"
+name = "Chatbot Gemini"
 icon = "🤖"
+
+[[pages]]
+path = "ChatbotOpenAI.py"
+name = "Chatbot OpenAI"
+icon = "🧑🏽‍💻"
 
 [[pages]]
 path = "Quiz.py"
