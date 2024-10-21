@@ -13,3 +13,8 @@ pdf2image
 faiss-cpu
 st-pages
 openai==0.28
+neo4j
+langchain 
+langchain-community 
+langchain-openai 
+langchain-experimental
