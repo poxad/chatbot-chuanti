@@ -23,4 +23,10 @@ path = "Admin_Panel.py"
 name = "Admin Panel"
 icon = "🛠️"
 
+[[pages]]
+path = "problem_code.py"
+name = "Problem-Code Matching"
+icon = "✨"
+
+
 
