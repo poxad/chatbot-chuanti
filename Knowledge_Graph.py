@@ -8,7 +8,6 @@ from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_openai import ChatOpenAI
 from langchain_core.documents import Document
 from openai import OpenAI
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -32,20 +31,19 @@ chat_histories = json.loads(json.dumps(past_chats, indent=4))
 
 # load all past_chat and create knowledge graph. Currently set to manual update, if you want, can use cron. 
 for key, value in chat_histories.items():
-    print(key)
+    # print(key)
     try :
         past_chat = joblib.load(f"data/{key}-st_messages")
         chat_history = json.dumps(past_chat, indent=4)
-    except FileNotFoundError:
+    except:
         past_chat = {}
     
     try :
         past_chat = joblib.load(f"data/{key}-problemspec")
         chat_history = json.dumps(past_chat, indent=4)
-    except FileNotFoundError:
+    except:
         past_chat = {}
-        
-    print(past_chat)
+        break
 
     chat_completion = client.chat.completions.create(
         messages=[
@@ -131,4 +129,3 @@ for key, value in chat_histories.items():
     # storing graph data
     file_path = 'data/graph_data'
     joblib.dump({'nodes': graph_documents_filtered[0].nodes, 'relationships': graph_documents_filtered[0].relationships}, file_path)
-    print('test')
