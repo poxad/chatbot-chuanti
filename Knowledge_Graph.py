@@ -8,7 +8,7 @@ from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_openai import ChatOpenAI
 from langchain_core.documents import Document
 from openai import OpenAI
-
+from dotenv import load_dotenv
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -43,7 +43,7 @@ for key, value in chat_histories.items():
         chat_history = json.dumps(past_chat, indent=4)
     except:
         past_chat = {}
-        break
+
 
     chat_completion = client.chat.completions.create(
         messages=[

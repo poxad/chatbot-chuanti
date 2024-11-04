@@ -10,11 +10,14 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 import datetime
+from openai import OpenAI
 
 load_dotenv()
 
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-openai.api_key = OPENAI_API_KEY
+# OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+# openai.api_key = OPENAI_API_KEY
+openai_api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=openai_api_key)
 new_chat_id = f'{time.time()}'
 MODEL_ROLE = 'ai'
 AI_AVATAR_ICON = '🧑🏽‍💻'
@@ -27,11 +30,12 @@ image_link=[]
 try:
     past_chats = joblib.load('data/past_chats_list')
     knowledge_graph = joblib.load('data/graph_data')
+    # print(knowledge_graph)
 except:
     past_chats = {}
     knowledge_graph = {}
     
-    
+
 
 def get_conversational_chain():
     prompt_template = """
@@ -59,21 +63,25 @@ def get_conversational_chain():
     Question:\n {question}\n
     Knowledge:\n{knowledge_graph}\n
 
+    Only show me result from knowledge graph
+
+
     Answer:
     """
     prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question","knowledge_graph"])
+    # print(prompt)
     return prompt
 
 def user_input(user_question, context, knowledge_graph):
     prompt = get_conversational_chain()
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": prompt.format(context=context, question=user_question,knowledge_graph =knowledge_graph)},
             {"role": "user", "content": user_question},
         ],
     )
-    return response.choices[0].message['content']
+    return response.choices[0].message.content
 
 @st.dialog("Clear chat history?")
 def modal():
@@ -172,7 +180,7 @@ if prompt := st.chat_input('Your message here...'):
     )
 
     with st.spinner("Waiting for AI response..."):
-        response = user_input(prompt, "Add context from uploaded files if available.")  # Update context handling if necessary
+        response = user_input(prompt, "Add context from uploaded files if available.", knowledge_graph  )  # Update context handling if necessary
 
     # Display assistant response in chat message container
     with st.chat_message(

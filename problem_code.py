@@ -290,7 +290,7 @@ if st.button("Match"):
                 """
                 kg_result = conn.query(query)
                 # print(f"Results for {clause}:")
-                st.write(kg_result)
+                # st.write(kg_result)
                 final_analysis = analyze_code_errors(preprocessed_spec, user_code, kg_result)
                 st.session_state.messages.append(
                     dict(
