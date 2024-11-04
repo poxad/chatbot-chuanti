@@ -33,21 +33,7 @@ try:
 except:
     st.session_state.messages = []
 
-# Check if 'messages' is not in st.session_state and initialize with a default message
-# if "messages" not in st.session_state or not st.session_state.messages:
-#     st.session_state.messages = []
-#     st.session_state.messages.append({
-#         "role": "🧑🏽‍💻",  # or any valid emoji
-#         "content": "Hey there, I'm your OpenAI chatbot. Feel free to ask any questions regarding Data Structures to me."
-#     })
 
-# Display chat messages from history on app rerun
-# for message in st.session_state.messages:
-#     with st.chat_message(
-#         name=message.get('role', 'user'),
-#         avatar=message.get('avatar', None),
-#     ):
-#         st.markdown(message['content'])
 
 # Function to preprocess the problem specification with GPT-4
 def preprocess_problem_spec(problem_spec):
@@ -318,4 +304,12 @@ if st.button("Match"):
     else:
         st.error("Please enter both a problem specification and user code.")
 
-joblib.dump(st.session_state.messages, f'data/{time.time()}-problemspec')
+
+chat_id = f'{time.time()}'
+st.session_state.chat_id = chat_id
+st.session_state.chat_title = f'PROBLEMSPEC-{datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}'      
+past_chats = joblib.load('data/past_chats_list')
+if st.session_state.chat_id not in past_chats.keys():
+    past_chats[st.session_state.chat_id] = st.session_state.chat_title
+    joblib.dump(past_chats, 'data/past_chats_list')
+joblib.dump(st.session_state.messages, f'data/{chat_id}-problemspec')

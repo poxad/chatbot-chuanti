@@ -8,6 +8,7 @@ from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_openai import ChatOpenAI
 from langchain_core.documents import Document
 from openai import OpenAI
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -19,7 +20,7 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 # If error here, need to start database first : https://console.neo4j.io/?product=aura-db&tenant=2f27695c-4050-43d8-99fa-40642e452dea#databases
 graph = Neo4jGraph()
 
-client = OpenAI(api_key= 'sk-proj-MVeDAvFcYNwaNqk0T0DlT3BlbkFJOomx2zVDPhGc7xi5TFDC')
+client = OpenAI(api_key= os.getenv("OPENAI_API_KEY"))
 
 # Load the past chats from the joblib file
 try:
@@ -31,13 +32,20 @@ chat_histories = json.loads(json.dumps(past_chats, indent=4))
 
 # load all past_chat and create knowledge graph. Currently set to manual update, if you want, can use cron. 
 for key, value in chat_histories.items():
-    # print(key)
+    print(key)
     try :
         past_chat = joblib.load(f"data/{key}-st_messages")
         chat_history = json.dumps(past_chat, indent=4)
-    except:
+    except FileNotFoundError:
         past_chat = {}
-        break
+    
+    try :
+        past_chat = joblib.load(f"data/{key}-problemspec")
+        chat_history = json.dumps(past_chat, indent=4)
+    except FileNotFoundError:
+        past_chat = {}
+        
+    print(past_chat)
 
     chat_completion = client.chat.completions.create(
         messages=[
@@ -123,3 +131,4 @@ for key, value in chat_histories.items():
     # storing graph data
     file_path = 'data/graph_data'
     joblib.dump({'nodes': graph_documents_filtered[0].nodes, 'relationships': graph_documents_filtered[0].relationships}, file_path)
+    print('test')
