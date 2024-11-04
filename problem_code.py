@@ -7,6 +7,7 @@ import datetime
 # from langchain.chains import GraphCypherQAChain
 from langchain_community.graphs import Neo4jGraph
 from langchain_openai import ChatOpenAI
+from neo4j_connection import Neo4jConnection  # Import the connection class
 
 
 
@@ -24,7 +25,9 @@ NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 # Initialize Neo4jGraph
-graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USERNAME, password = NEO4J_PASSWORD)
+conn = Neo4jConnection(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
+st.success("Connection to Neo4j successful!")
+
 
 # Function to preprocess the problem specification with GPT-4
 def preprocess_problem_spec(problem_spec):
@@ -264,14 +267,17 @@ if st.button("Match"):
         with st.spinner("Analyzing the user code..."):
             code_analysis_kg = analyze_code_error_kg(preprocessed_spec, user_code)
             codes_analysis_kg = code_analysis_kg.split(";")
+            st.write(code_analysis_kg)
             for clause in codes_analysis_kg:
+                # st.write(clause)
                 query = f"""
                 MATCH (n)-[r]-(relatedNode)
                 WHERE n.id = '{clause}'
                 RETURN n, r, relatedNode
                 """
-                kg_result = graph.query(query)
+                kg_result = conn.query(query)
                 # print(f"Results for {clause}:")
+                # st.write(kg_result)
                 final_analysis = analyze_code_errors(preprocessed_spec, user_code, kg_result)
 
         # Display the code analysis
