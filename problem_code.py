@@ -2,6 +2,12 @@ import streamlit as st
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+import time
+import datetime
+# from langchain.chains import GraphCypherQAChain
+from langchain_community.graphs import Neo4jGraph
+from langchain_openai import ChatOpenAI
+
 
 
 # Load environment variables from the .env file
@@ -12,6 +18,13 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # Initialize the OpenAI client
 client = OpenAI(api_key=openai_api_key)
+
+NEO4J_URI = os.getenv("NEO4J_URI")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+
+# Initialize Neo4jGraph
+graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USERNAME, password = NEO4J_PASSWORD)
 
 # Function to preprocess the problem specification with GPT-4
 def preprocess_problem_spec(problem_spec):
@@ -104,7 +117,7 @@ def preprocess_problem_spec(problem_spec):
     return preprocessed_spec
 
 # Function to analyze the code for potential logical errors
-def analyze_code_errors(problem_spec, user_code):
+def analyze_code_errors(problem_spec, user_code, knowledge_graph):
     prompt_ver1 = f"""
     You are given a problem specification and a piece of code that attempts to solve it. Your task is to analyze the code and point out where the user might have made logical errors based on the problem requirements without yapping. Focus on common issues like:
 
@@ -125,6 +138,16 @@ def analyze_code_errors(problem_spec, user_code):
     You are given a problem specification and a piece of code that attempts to solve it. Your task is to analyze the code and point out where the user might have made logical errors based on the problem requirements without yapping.
     """
 
+    prompt_ver3 = f"""
+    Based on the problem specification and user code below, identify the main type of logical error present in the code with one sentence. The possible types of errors include:
+
+    - **Wrong data structure choice**: The code uses an inappropriate data structure for the requirements.
+    - **Incorrect implementation**: An error in how the data structure or algorithm is implemented.
+    - **Edge case handling error**: Failure to handle an important edge case (like empty inputs or boundary values).
+    - **Constraint violation**: The code violates constraints like time complexity, space complexity, or other problem-specific limits.
+
+    """
+
 
     # Prompt for analyzing the user's code based on the problem specification
     messages = [
@@ -132,7 +155,10 @@ def analyze_code_errors(problem_spec, user_code):
         {
             "role": "user",
             "content": f"""
-            You are given a problem specification and a piece of code that attempts to solve it. Your task is to analyze the code and point out where the user might have made logical errors based on the problem requirements. Focus on common issues like:
+            You are given a problem specification, a piece of code that attempts to solve it, and a knowledge graph showing previous queries about it. 
+            Your task is to analyze the code and point out where the user might have made logical errors based on the problem requirements. 
+            You should also point out any previous query(if any) from the knowledge graph.
+            Focus on common issues like:
 
               1. **Wrong choice of data structures**: 
                   - Are the data structures used (e.g., lists, dictionaries, queues, etc.) appropriate for the problem?
@@ -154,8 +180,42 @@ def analyze_code_errors(problem_spec, user_code):
             ```python
             {user_code}
             ```
+            
+            Knowledge Graph:
+            {knowledge_graph}
 
             IMPORTANT: DO NOT PRINT CODE, YOU SHOULD ONLY GIVE HINTS PARAGRAPH(S)
+            """
+        }
+    ]
+    
+    # Make the API call to OpenAI with GPT-4 model
+    completion = client.chat.completions.create(
+        model="gpt-4",
+        messages=messages
+    )
+
+    # Extract the generated message from the API response
+    analysis = completion.choices[0].message.content
+    return analysis
+
+def analyze_code_error_kg(problem_spec, user_code):
+    messages = [
+        {"role": "system", "content": "You are an expert programmer who analyzes code for logical errors based on a given problem specification."},
+        {
+            "role": "user",
+            "content": f"""
+            Based on the problem specification and the user code below, identify and super briefly describe each logical error in the code, using concise labels with **no verbs** and only the most essential words. Format each error label as a very short noun phrase that describes the problem directly (e.g., "wrong reverse integer" instead of "wrongly reverse integer").
+
+            If there are multiple errors, list each one, separated by semicolons (;).
+            ---
+            Problem Specification:
+            {problem_spec}
+
+            Code:
+            ```python
+            {user_code}
+            ```
             """
         }
     ]
@@ -201,13 +261,21 @@ if st.button("Match"):
         # Display the preprocessed problem specification
         # st.subheader("Preprocessed Problem Specification")
         # st.write(preprocessed_spec)
-
-        # Call the function to analyze the code for errors
         with st.spinner("Analyzing the user code..."):
-            code_analysis = analyze_code_errors(preprocessed_spec, user_code)
+            code_analysis_kg = analyze_code_error_kg(preprocessed_spec, user_code)
+            codes_analysis_kg = code_analysis_kg.split(";")
+            for clause in codes_analysis_kg:
+                query = f"""
+                MATCH (n)-[r]-(relatedNode)
+                WHERE n.id = '{clause}'
+                RETURN n, r, relatedNode
+                """
+                kg_result = graph.query(query)
+                # print(f"Results for {clause}:")
+                final_analysis = analyze_code_errors(preprocessed_spec, user_code, kg_result)
 
         # Display the code analysis
         st.subheader("Code Analysis")
-        st.write(code_analysis)
+        st.write(final_analysis)
     else:
         st.error("Please enter both a problem specification and user code.")
