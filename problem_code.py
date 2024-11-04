@@ -8,7 +8,7 @@ import datetime
 from langchain_community.graphs import Neo4jGraph
 from langchain_openai import ChatOpenAI
 from neo4j_connection import Neo4jConnection  # Import the connection class
-
+import joblib
 
 
 # Load environment variables from the .env file
@@ -28,6 +28,26 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 conn = Neo4jConnection(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
 st.success("Connection to Neo4j successful!")
 
+try:
+    st.session_state.messages = joblib.load(f'data/{time.time()}-problemspec')
+except:
+    st.session_state.messages = []
+
+# Check if 'messages' is not in st.session_state and initialize with a default message
+# if "messages" not in st.session_state or not st.session_state.messages:
+#     st.session_state.messages = []
+#     st.session_state.messages.append({
+#         "role": "🧑🏽‍💻",  # or any valid emoji
+#         "content": "Hey there, I'm your OpenAI chatbot. Feel free to ask any questions regarding Data Structures to me."
+#     })
+
+# Display chat messages from history on app rerun
+# for message in st.session_state.messages:
+#     with st.chat_message(
+#         name=message.get('role', 'user'),
+#         avatar=message.get('avatar', None),
+#     ):
+#         st.markdown(message['content'])
 
 # Function to preprocess the problem specification with GPT-4
 def preprocess_problem_spec(problem_spec):
@@ -72,6 +92,7 @@ def preprocess_problem_spec(problem_spec):
 
     # Extract the generated message from the API response
     preprocessed_spec = completion.choices[0].message.content
+    
     return preprocessed_spec
 
 
@@ -260,6 +281,12 @@ if st.button("Match"):
         # Call the preprocessing function for the problem specification
         with st.spinner("Processing the problem specification..."):
             preprocessed_spec = preprocess_problem_spec(problem_spec)
+            st.session_state.messages.append(
+        dict(
+            role='problem',
+            content=preprocessed_spec,
+        )
+    )
         
         # Display the preprocessed problem specification
         # st.subheader("Preprocessed Problem Specification")
@@ -267,7 +294,7 @@ if st.button("Match"):
         with st.spinner("Analyzing the user code..."):
             code_analysis_kg = analyze_code_error_kg(preprocessed_spec, user_code)
             codes_analysis_kg = code_analysis_kg.split(";")
-            st.write(code_analysis_kg)
+            # st.write(code_analysis_kg)
             for clause in codes_analysis_kg:
                 # st.write(clause)
                 query = f"""
@@ -277,11 +304,18 @@ if st.button("Match"):
                 """
                 kg_result = conn.query(query)
                 # print(f"Results for {clause}:")
-                # st.write(kg_result)
+                st.write(kg_result)
                 final_analysis = analyze_code_errors(preprocessed_spec, user_code, kg_result)
-
+                st.session_state.messages.append(
+                    dict(
+                        role="result",
+                        content=final_analysis,
+                    )
+                )
         # Display the code analysis
         st.subheader("Code Analysis")
         st.write(final_analysis)
     else:
         st.error("Please enter both a problem specification and user code.")
+
+joblib.dump(st.session_state.messages, f'data/{time.time()}-problemspec')
