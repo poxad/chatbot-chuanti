@@ -19,7 +19,7 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 # If error here, need to start database first : https://console.neo4j.io/?product=aura-db&tenant=2f27695c-4050-43d8-99fa-40642e452dea#databases
 graph = Neo4jGraph()
 
-client = OpenAI(api_key= 'sk-proj-MVeDAvFcYNwaNqk0T0DlT3BlbkFJOomx2zVDPhGc7xi5TFDC')
+client = OpenAI(api_key= os.getenv("OPENAI_API_KEY"))
 
 # Load the past chats from the joblib file
 try:
@@ -34,6 +34,12 @@ for key, value in chat_histories.items():
     # print(key)
     try :
         past_chat = joblib.load(f"data/{key}-st_messages")
+        chat_history = json.dumps(past_chat, indent=4)
+    except:
+        past_chat = {}
+    
+    try :
+        past_chat = joblib.load(f"data/{key}-problemspec")
         chat_history = json.dumps(past_chat, indent=4)
     except:
         past_chat = {}

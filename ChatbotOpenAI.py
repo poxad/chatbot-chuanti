@@ -26,8 +26,12 @@ image_link=[]
 
 try:
     past_chats = joblib.load('data/past_chats_list')
+    knowledge_graph = joblib.load('data/graph_data')
 except:
     past_chats = {}
+    knowledge_graph = {}
+    
+    
 
 def get_conversational_chain():
     prompt_template = """
@@ -53,18 +57,19 @@ def get_conversational_chain():
     
     Context:\n {context}\n
     Question:\n {question}\n
+    Knowledge:\n{knowledge_graph}\n
 
     Answer:
     """
-    prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
+    prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question","knowledge_graph"])
     return prompt
 
-def user_input(user_question, context):
+def user_input(user_question, context, knowledge_graph):
     prompt = get_conversational_chain()
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": prompt.format(context=context, question=user_question)},
+            {"role": "system", "content": prompt.format(context=context, question=user_question,knowledge_graph =knowledge_graph)},
             {"role": "user", "content": user_question},
         ],
     )
