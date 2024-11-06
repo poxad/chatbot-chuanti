@@ -8,15 +8,16 @@ import easyocr
 import numpy as np
 import pdf2image
 from langchain_community.vectorstores import FAISS
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_openai import OpenAIEmbeddings  # Update the import statement
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # Load API key from environment
-GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
-api_key = GOOGLE_API_KEY
+OPENAI_API_KEY = "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"
+ # Update the environment variable
+api_key = OPENAI_API_KEY
 
 # Create a data folder if it doesn't exist
 os.makedirs('data/', exist_ok=True)
@@ -68,28 +69,19 @@ def get_text_chunks(text):
     return chunks
 
 def get_vector_store(text_chunks, api_key):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key)
+    embeddings = OpenAIEmbeddings(openai_api_key=api_key)  # Use OpenAI embeddings
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
     vector_store.save_local(r"faiss_index")
 
 # Main application logic
 st.title("🛠️ Admin Panel")
 
-# Simple login form
-username = st.text_input("Username")
-password = st.text_input("Password", type="password")
-
-
-if username == "pox" and password == "pox":
-    if st.button("UPDATE CONTEXT/FAISS"):
-        with st.status("Updating the FAISS...."):
-            start_time = time.time()
-            raw_text = get_file_text_from_local()
-            text_chunks = get_text_chunks(raw_text)
-            get_vector_store(text_chunks, api_key)
-            elapsed_time = time.time() - start_time
-            minutes, seconds = divmod(elapsed_time, 60)
-            st.write(f"Total Processing took {int(minutes)} minute(s) and {seconds:.2f} seconds.")
-else:
-    if username or password:
-        st.error("Invalid username or password. Please try again.")
+if st.button("UPDATE CONTEXT/FAISS"):
+    with st.status("Updating the FAISS...."):
+        start_time = time.time()
+        raw_text = get_file_text_from_local()
+        text_chunks = get_text_chunks(raw_text)
+        get_vector_store(text_chunks, api_key)
+        elapsed_time = time.time() - start_time
+        minutes, seconds = divmod(elapsed_time, 60)
+        st.write(f"Total Processing took {int(minutes)} minute(s) and {seconds:.2f} seconds.")

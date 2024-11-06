@@ -2,7 +2,7 @@ import joblib
 import pprint
 
 try:
-    past_chats = joblib.load('data/past_chats_list')
+    past_chats = joblib.load('data/graph_data')
 except:
     past_chats = {}
     

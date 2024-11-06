@@ -26,7 +26,7 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 # Initialize Neo4jGraph
 conn = Neo4jConnection(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
-st.success("Connection to Neo4j successful!")
+# st.success("Connection to Neo4j successful!")
 
 try:
     st.session_state.messages = joblib.load(f'data/{time.time()}-problemspec')
@@ -161,42 +161,29 @@ def analyze_code_errors(problem_spec, user_code, knowledge_graph):
 
     # Prompt for analyzing the user's code based on the problem specification
     messages = [
-        {"role": "system", "content": "You are an expert programmer who analyzes code for logical errors based on a given problem specification."},
-        {
-            "role": "user",
-            "content": f"""
-            You are given a problem specification, a piece of code that attempts to solve it, and a knowledge graph showing previous queries about it. 
-            Your task is to analyze the code and point out where the user might have made logical errors based on the problem requirements. 
-            You should also point out any previous query(if any) from the knowledge graph.
-            Focus on common issues like:
+      {"role": "system", "content": "You are an expert programmer who analyzes code for logical errors based on a given problem specification."},
+      {
+          "role": "user",
+          "content": f"""
+          You are given a problem specification and a piece of code that attempts to solve it. Your task is to analyze the code and point out where the user might have made errors based on the problem requirements.
 
-              1. **Wrong choice of data structures**: 
-                  - Are the data structures used (e.g., lists, dictionaries, queues, etc.) appropriate for the problem?
-                  - Is the user correctly utilizing the chosen data structure's properties?
+          ---
+          Problem Specification:
+          {problem_spec}
 
-              2. **Incorrect implementation of the data structure**:
-                  - Are operations like insertions, deletions, or lookups implemented correctly according to the problem requirements?
+          Code:
+          ```
+          {user_code}
+          ```
 
-              3. **Faulty logic in handling edge cases**:
-                  - Are there any missing conditions or incorrect handling of cases like empty lists, specific input sizes, or the final output format?
+          IMPORTANT:
+          - Do not print or repeat the code.
+          - Provide only a brief, single-paragraph response with question-based hints that encourage the user to think critically about possible issues.
+          - Focus on the main logical errors or misunderstandings rather than specific syntax issues.
 
-              4. **Failure to meet problem constraints**:
-                  - Is the code violating any constraints such as time/space complexity, order of operations, or the problem’s specific rules?
-            ---
-            Problem Specification:
-            {problem_spec}
-
-            Code:
-            ```python
-            {user_code}
-            ```
-            
-            Knowledge Graph:
-            {knowledge_graph}
-
-            IMPORTANT: DO NOT PRINT CODE, YOU SHOULD ONLY GIVE HINTS PARAGRAPH(S)
-            """
-        }
+          Example: "Does your loop handle edge cases where [condition]?" or "Have you considered how [aspect] will behave with [specific input]?"
+          """
+      }
     ]
     
     # Make the API call to OpenAI with GPT-4 model

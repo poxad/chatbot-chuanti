@@ -4,19 +4,19 @@ import joblib
 import streamlit as st
 import pandas as pd
 from pathlib import Path
-import openai
+from openai import OpenAI
 from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 import datetime
-from openai import OpenAI
-
+import easyocr
+from PyPDF2 import PdfReader
 load_dotenv()
 
-# OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-# openai.api_key = OPENAI_API_KEY
-openai_api_key = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = "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"
+openai_api_key = OPENAI_API_KEY
 client = OpenAI(api_key=openai_api_key)
 new_chat_id = f'{time.time()}'
 MODEL_ROLE = 'ai'
@@ -30,11 +30,10 @@ image_link=[]
 try:
     past_chats = joblib.load('data/past_chats_list')
     knowledge_graph = joblib.load('data/graph_data')
-    # print(knowledge_graph)
 except:
     past_chats = {}
     knowledge_graph = {}
-    
+
 
 
 def get_conversational_chain():
@@ -61,23 +60,22 @@ def get_conversational_chain():
     
     Context:\n {context}\n
     Question:\n {question}\n
-    Knowledge:\n{knowledge_graph}\n
-
-    Only show me result from knowledge graph
-
+    Knowledge Graph:\n {knowledge_graph}\n
 
     Answer:
     """
-    prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question","knowledge_graph"])
-    # print(prompt)
+    prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question", "knowledge_graph"])
     return prompt
 
-def user_input(user_question, context, knowledge_graph):
+def user_input(user_question, knowledge_graph):
+    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+    new_db = FAISS.load_local(r"faiss_index", embeddings, allow_dangerous_deserialization=True)
+    docs = new_db.similarity_search(user_question)
     prompt = get_conversational_chain()
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": prompt.format(context=context, question=user_question,knowledge_graph =knowledge_graph)},
+            {"role": "system", "content": prompt.format(context=docs, question=user_question, knowledge_graph=knowledge_graph)},
             {"role": "user", "content": user_question},
         ],
     )
@@ -117,18 +115,20 @@ def clear_chat_history():
 # Sidebar allows a list of past chats
 with st.sidebar:
     st.write('# Sidebar Menu')
+    openai_chats = {key: value for key, value in past_chats.items() if value.startswith("OPENAI")}
     
     if st.session_state.get('chat_id') is None:
         st.session_state.chat_id = st.selectbox(
             label='Pick a past chat',
-            options=[new_chat_id] + list(past_chats.keys()),
+            options=[new_chat_id] + list(openai_chats.keys()),
             format_func=lambda x: past_chats.get(x, 'New Chat'),
             placeholder='_',
         )
     else:
+        
         st.session_state.chat_id = st.selectbox(
             label='Pick a past chat',
-            options=[new_chat_id, st.session_state.chat_id] + list(past_chats.keys()),
+            options=[new_chat_id, st.session_state.chat_id] + list(openai_chats.keys()),
             index=1,
             format_func=lambda x: past_chats.get(x, 'New Chat' if x != st.session_state.chat_id else st.session_state.chat_title),
             placeholder='_',
@@ -154,6 +154,8 @@ if "messages" not in st.session_state or not st.session_state.messages:
         "content": "Hey there, I'm your OpenAI chatbot. Feel free to ask any questions regarding Data Structures to me."
     })
 
+
+
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(
@@ -178,9 +180,9 @@ if prompt := st.chat_input('Your message here...'):
             content=prompt,
         )
     )
-
+    
     with st.spinner("Waiting for AI response..."):
-        response = user_input(prompt, "Add context from uploaded files if available.", knowledge_graph  )  # Update context handling if necessary
+        response = user_input(prompt, knowledge_graph)  # Update context handling if necessary
 
     # Display assistant response in chat message container
     with st.chat_message(
