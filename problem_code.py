@@ -272,7 +272,7 @@ if st.button("Match"):
                 # st.write(clause)
                 query = f"""
                 MATCH (n)-[r]-(relatedNode)
-                WHERE n.id = '{clause}'
+                WHERE n.id CONTAINS '{clause}'
                 RETURN n, r, relatedNode
                 """
                 kg_result = conn.query(query)

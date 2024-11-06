@@ -7,6 +7,7 @@ from langchain_community.graphs import Neo4jGraph
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_openai import ChatOpenAI
 from langchain_core.documents import Document
+from neo4j_connection import Neo4jConnection
 from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv()
@@ -31,7 +32,7 @@ chat_histories = json.loads(json.dumps(past_chats, indent=4))
 
 # load all past_chat and create knowledge graph. Currently set to manual update, if you want, can use cron. 
 for key, value in chat_histories.items():
-    # print(key)
+    print(key)
     try :
         past_chat = joblib.load(f"data/{key}-st_messages")
         chat_history = json.dumps(past_chat, indent=4)
@@ -105,27 +106,78 @@ for key, value in chat_histories.items():
     )
 
     summary = chat_completion.choices[0].message.content
-    print("Summary:", summary)
+    # print("Summary:", summary)
 
     llm = ChatOpenAI(temperature=0, model_name="gpt-4-turbo")
 
+    # Define the restricted ids set
+    restricted_ids = {"Person", "Algorithm", "Problem", "Concept", "Programming Language", 
+                    "Framework", "Library", "Tool", "Project", "Function", 
+                    "Error", "Testcase", "Solution", "Slide", "Snippet"}
+
+    # Initialize LLMGraphTransformer
     llm_transformer_filtered = LLMGraphTransformer(
         llm=llm,
         allowed_nodes=["Person", "Algorithm", "Problem", "Concept", "Programming Language", "Framework", "Library", "Tool", "Project", "Function", "Error", "Testcase", "Solution", "Slide", "Snippet"],
         allowed_relationships=["WorksOn", "TryingToSolve", "Prefers", "Asks", "CanBeSolvedBy", "Uses", "IsImplementedIn", "IsExplainedOn", "Has", "UsedIn", "DependsOn", "Includes", "IsPartOf", "Solves", "ResolvedBy", "Resolves"],
     )
+
+    # Convert documents to graph documents
     documents = [Document(page_content=summary)]
-    graph_documents_filtered = llm_transformer_filtered.convert_to_graph_documents(
-        documents
-    )
-    print(f"Nodes:")
-    pprint.pp(graph_documents_filtered[0].nodes)
-    print(f"Relationships:")
-    pprint.pp(graph_documents_filtered[0].relationships)
+    graph_documents_filtered = llm_transformer_filtered.convert_to_graph_documents(documents)
 
+    # Filter out nodes with restricted ids before adding to the graph
+    for graph_doc in graph_documents_filtered:
+        graph_doc.nodes = [node for node in graph_doc.nodes if node.id not in restricted_ids]
+
+    # Add the filtered graph documents to the graph
     graph.add_graph_documents(graph_documents_filtered)
-    print(graph.schema)
+    # print(graph.schema)
 
-    # storing graph data
-    file_path = 'data/graph_data'
-    joblib.dump({'nodes': graph_documents_filtered[0].nodes, 'relationships': graph_documents_filtered[0].relationships}, file_path)
+# storing graph data
+file_path = 'data/graph_data'
+conn = Neo4jConnection(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
+def store_graph(conn):
+    def get_nodes():
+        # Execute the Cypher query to get all nodes
+        all_nodes = conn.query("MATCH (n) RETURN n")
+
+        extracted_nodes = []
+
+        # Process each node record
+        for nodes in all_nodes:
+            node = nodes['n']  # Extract the node from the record
+            labels = list(node.labels)  # Convert frozen set of labels to list
+            node_id = node['id']  # Access the 'id' property
+            extracted_nodes.append({'labels': labels, 'id': node_id})
+
+        return extracted_nodes
+
+    def get_relationships():
+        query = """
+        MATCH (start)-[r]->(end)
+        RETURN start.id AS start_node, type(r) AS relationship, end.id AS end_node
+        """
+        result = conn.query(query)
+        relationships = []
+
+        # Process query result
+        for record in result:
+            start_node = record["start_node"]
+            relationship = record["relationship"]
+            end_node = record["end_node"]
+            relationships.append(f"{start_node} -> {relationship} -> {end_node}")
+
+        return relationships
+
+    # Get nodes and relationships
+    nodes = get_nodes()
+    relationships = get_relationships()
+
+    return nodes, relationships
+
+# Example of usage
+nodes, relationships = store_graph(conn)
+pprint.pprint(nodes)
+pprint.pprint(relationships)
+joblib.dump({'nodes': nodes, 'relationships': relationships}, file_path)
