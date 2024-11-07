@@ -69,7 +69,7 @@ The Admin Panel provides administrative controls, including chat history managem
 ## Usage
 
 - **AI Tutor**: Type questions into the chat input box. The AI will use past conversations and knowledge graphs to answer in a context-aware manner.
-- **Problem-Code Matching**: Enter a problem description and corresponding code to receive feedback on the code’s logical accuracy.
+- **Problem-Code Matching**: Enter a problem description and corresponding code to receive feedback on the code’s logical feedback.
 - **DS Quiz**: Navigate to the quiz page to answer questions on Data Structures and check your understanding.
 - **Admin Panel**: Access this page to manage chat history and stored data files.
 
