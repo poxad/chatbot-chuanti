@@ -29,7 +29,7 @@ This page allows users to input a coding problem and solution. The AI analyzes t
 This page includes a Data Structures quiz with questions to test users' understanding of key concepts.
 
 ### Admin Panel 🛠️
-The Admin Panel provides administrative controls, including chat history management and data storage.
+The Admin Panel provides administrative controls, context management and storage.
 
 ---
 
