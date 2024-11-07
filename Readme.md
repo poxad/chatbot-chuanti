@@ -59,7 +59,7 @@ The Admin Panel provides administrative controls, including chat history managem
 4. **Run the Application**
    Start the Streamlit app by running:
    ```bash
-   streamlit run Home_Page.py
+   streamlit run app.py
    ```
 
 ---
