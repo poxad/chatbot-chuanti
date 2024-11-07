@@ -3,15 +3,17 @@ path = "Home_Page.py"
 name = "Home"
 icon = "🏠"
 
-[[pages]]
-path = "Chatbot.py"
-name = "Chatbot Gemini"
-icon = "🤖"
 
 [[pages]]
 path = "ChatbotOpenAI.py"
-name = "Chatbot OpenAI"
+name = "AI Tutor"
 icon = "🧑🏽‍💻"
+
+[[pages]]
+path = "problem_code.py"
+name = "Problem-Code Matching"
+icon = "✨"
+
 
 [[pages]]
 path = "Quiz.py"
@@ -23,10 +25,6 @@ path = "Admin_Panel.py"
 name = "Admin Panel"
 icon = "🛠️"
 
-[[pages]]
-path = "problem_code.py"
-name = "Problem-Code Matching"
-icon = "✨"
 
 
 

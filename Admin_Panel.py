@@ -14,10 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Load API key from environment
-OPENAI_API_KEY = "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"
- # Update the environment variable
-api_key = OPENAI_API_KEY
+# Update the environment variable
+api_key = os.getenv("OPENAI_API_KEY")
 
 # Create a data folder if it doesn't exist
 os.makedirs('data/', exist_ok=True)

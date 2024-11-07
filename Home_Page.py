@@ -17,20 +17,20 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 # make_sidebar()
-st.markdown("### 🤖 Data Structures - Chen Yi Shin")
+st.markdown("### 🤖 Welcome to AI Tutor")
 # st.info("Repository on [Github](https://github.com/poxad/all-in-one-chatbot.git)")
 # st.image("assets/1a.jpg")
 st.markdown("---")
 # Example prompts
 example_prompts = [
     "👨‍💻 Chatbot",
-    "❓ Quiz",
+    "✨ Problem-Code Matcher",
 ]
 
 button_cols = st.columns(2)
 
 if button_cols[0].button(example_prompts[0]):
-    st.switch_page("Chatbot.py")
+    st.switch_page("ChatbotOpenAI.py")
 if button_cols[1].button(example_prompts[1]):
     st.switch_page("Quiz.py")
 # Add created by text

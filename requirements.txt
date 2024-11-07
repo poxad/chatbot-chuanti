@@ -12,9 +12,5 @@ streamlit_option_menu
 pdf2image
 faiss-cpu
 st-pages
-openai==0.28
+openai
 neo4j
-langchain 
-langchain-community 
-langchain-openai 
-langchain-experimental

@@ -161,34 +161,49 @@ def analyze_code_errors(problem_spec, user_code, knowledge_graph):
 
     # Prompt for analyzing the user's code based on the problem specification
     messages = [
-      {"role": "system", "content": "You are an expert programmer who analyzes code for logical errors based on a given problem specification."},
-      {
-          "role": "user",
-          "content": f"""
-          You are given a problem specification and a piece of code that attempts to solve it. Your task is to analyze the code and point out where the user might have made errors based on the problem requirements.
+        {"role": "system", "content": "You are an expert programmer who analyzes code for logical errors based on a given problem specification, utilizing insights from a related knowledge graph for more context."},
+        {
+            "role": "user",
+            "content": f"""
+            Before proceeding with the analysis of your code, I need to check with you first:
+            
+            - Do you recall working on a similar problem or having discussed a similar issue (concept, algorithm, or error) related to this problem before? 
+            - For example, have you worked on similar problems involving [example problem], [specific error], or [related concept]? We may have discussed this in our past conversations (knowledge graph).
 
-          ---
-          Problem Specification:
-          {problem_spec}
+            If turns out there is the similar problems, concepts or error in the knowledge graph, explain it with the insights of the knowledge graph. If not, I will proceed with a fresh analysis using the knowledge graph provided.
 
-          Code:
-          ```
-          {user_code}
-          ```
+            ---
+            Problem Specification:
+            {problem_spec}
 
-          IMPORTANT:
-          - Do not print or repeat the code.
-          - Provide only a brief, single-paragraph response with question-based hints that encourage the user to think critically about possible issues.
-          - Focus on the main logical errors or misunderstandings rather than specific syntax issues.
+            Code:
+            ```
+            {user_code}
+            ```
 
-          Example: "Does your loop handle edge cases where [condition]?" or "Have you considered how [aspect] will behave with [specific input]?"
-          """
-      }
+            Knowledge Graph Insights:
+            ```
+            {knowledge_graph}
+            ```
+
+            IMPORTANT:
+            - Focus on using the knowledge graph information to enhance your analysis. If specific knowledge graph insights align with known issues, mention them in a way that prompts the user to consider these aspects.
+            - Treat Knowledge Graph as like records of past chats histories of the user.
+            - Do not print or repeat the code.
+            - Provide a brief, single-paragraph response with hints or guiding questions to encourage critical thinking around potential issues.
+            - Focus primarily on logical errors, misunderstandings of problem requirements, and incorrect use of data structures rather than syntax issues.
+
+            Example: "Have you considered how [condition] might affect the result? Could updating your approach to [aspect] lead to more reliable results?"
+            """
+        }
     ]
+
+
+
     
     # Make the API call to OpenAI with GPT-4 model
     completion = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o",
         messages=messages
     )
 
@@ -202,10 +217,14 @@ def analyze_code_error_kg(problem_spec, user_code):
         {
             "role": "user",
             "content": f"""
-            Based on the problem specification and the user code below, identify and super briefly describe each logical error in the code, using concise labels with **no verbs** and only the most essential words. Format each error label as a very short noun phrase that describes the problem directly (e.g., "wrong reverse integer" instead of "wrongly reverse integer").
+            Based on the problem specification and the user code below, first generate a **concise title for the problem, maximum 5 words** in just a few words. Then, identify and briefly describe each logical error in the code. 
 
-            If there are multiple errors, list each one, separated by semicolons (;).
-            ---
+            Format each error label as a very short noun phrase without verbs, capturing the essence of the issue (e.g., "wrong reverse integer" instead of "wrongly reverse integer").
+
+            Format the response as follows:
+            - "Brief Title of the Problem"; error1; error2; error3; ...
+
+            --- 
             Problem Specification:
             {problem_spec}
 
@@ -216,7 +235,7 @@ def analyze_code_error_kg(problem_spec, user_code):
             """
         }
     ]
-    
+
     # Make the API call to OpenAI with GPT-4 model
     completion = client.chat.completions.create(
         model="gpt-4",
@@ -261,42 +280,30 @@ if st.button("Match"):
         )
     )
         
-        # Display the preprocessed problem specification
-        # st.subheader("Preprocessed Problem Specification")
-        # st.write(preprocessed_spec)
         with st.spinner("Analyzing the user code..."):
-            code_analysis_kg = analyze_code_error_kg(preprocessed_spec, user_code)
-            codes_analysis_kg = code_analysis_kg.split(";")
-            # st.write(code_analysis_kg)
-            for clause in codes_analysis_kg:
-                # st.write(clause)
-                query = f"""
-                MATCH (n)-[r]-(relatedNode)
-                WHERE n.id CONTAINS '{clause}'
-                RETURN n, r, relatedNode
-                """
-                kg_result = conn.query(query)
-                # print(f"Results for {clause}:")
-                # st.write(kg_result)
-                final_analysis = analyze_code_errors(preprocessed_spec, user_code, kg_result)
-                st.session_state.messages.append(
-                    dict(
-                        role="result",
-                        content=final_analysis,
-                    )
+              try:
+                  kg_result = joblib.load('data/graph_data')
+              except:
+                  kg_result = {}
+              final_analysis = analyze_code_errors(preprocessed_spec, user_code, kg_result)
+              st.session_state.messages.append(
+                  dict(
+                      role="result",
+                      content=final_analysis,
+                  )
                 )
         # Display the code analysis
         st.subheader("Code Analysis")
         st.write(final_analysis)
+        chat_id = f'{time.time()}'
+        st.session_state.chat_id = chat_id
+        st.session_state.chat_title = f'PROBLEMSPEC-{datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}'      
+        past_chats = joblib.load('data/past_chats_list')
+        if st.session_state.chat_id not in past_chats.keys():
+            past_chats[st.session_state.chat_id] = st.session_state.chat_title
+            joblib.dump(past_chats, 'data/past_chats_list')
+        joblib.dump(st.session_state.messages, f'data/{chat_id}-problemspec')
     else:
         st.error("Please enter both a problem specification and user code.")
 
 
-chat_id = f'{time.time()}'
-st.session_state.chat_id = chat_id
-st.session_state.chat_title = f'PROBLEMSPEC-{datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}'      
-past_chats = joblib.load('data/past_chats_list')
-if st.session_state.chat_id not in past_chats.keys():
-    past_chats[st.session_state.chat_id] = st.session_state.chat_title
-    joblib.dump(past_chats, 'data/past_chats_list')
-joblib.dump(st.session_state.messages, f'data/{chat_id}-problemspec')
