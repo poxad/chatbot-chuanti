@@ -55,6 +55,8 @@ The Admin Panel provides administrative controls, including chat history managem
      NEO4J_USERNAME=your_neo4j_username
      NEO4J_PASSWORD=your_neo4j_password
      ```
+4. **Chatbot Context**
+   - Put any PDF files to be your context
 
 4. **Run the Application**
    Start the Streamlit app by running:
