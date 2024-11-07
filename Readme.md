@@ -1,42 +1,81 @@
-# RAG Gemini AI Chatbot built with Streamlit
+# Personalized AI Tutor For Programming
 
-## Overview
+This project is a Streamlit-based application featuring several pages, including an AI Tutor chatbot and a problem-code matching tool. The AI Tutor provides answers to programming-related questions using a knowledge graph and RAG. The Problem-Code Matching tool allows users to input a coding problem and incorrect code for analysis.
 
-This project is a Streamlit-based chat application that interacts with the Google Gemini AI model, providing users with a powerful and flexible AI assistant. The chatbot allows users to engage in dynamic conversations and enhances its contextual understanding by allowing users to upload images and PDFs. The application also supports chat history, enabling users to revisit and continue previous conversations.
+## Table of Contents
+- [Features](#features)
+- [Setup](#setup)
+- [Usage](#usage)
 
+---
 
-https://github.com/user-attachments/assets/ff545378-8f85-4738-9c43-582f40a3d1b2
+## Features
 
+### AI Tutor 🧑🏽‍💻
+This page includes a conversational AI chatbot designed to help users with Data Structures-related questions. It uses:
+- **Past Chat Context**: Draws on previous interactions for context-aware answers.
+- **Knowledge Graph**: A stored knowledge base that aids in continuity and understanding user progress.
+- **Response Categories**: Problem Definition, Concept Explanation, Step-by-step Guidance, and Pseudo Code Visualization.
 
-## Getting Started
-### Disclaimer
+### Problem-Code Matching ✨
+This page allows users to input a coding problem and solution. The AI analyzes the solution for logical errors based on the problem specification, with attention to:
+- **Data Structure Appropriateness**
+- **Implementation Correctness**
+- **Edge Case Handling**
+- **Problem Constraints**
 
-The features in this chatbot are not as complete as shown in the video, missing features: Admin Panel and Database Chatbot. This is not shown here due to privacy reasons and due to simplitcity. 
-### Features
+### DS Quiz ❓
+This page includes a Data Structures quiz with questions to test users' understanding of key concepts.
 
-Conversational AI: Engage in detailed and expressive conversations with the Gemini AI model.
+### Admin Panel 🛠️
+The Admin Panel provides administrative controls, including chat history management and data storage.
 
-Chat History: Save and revisit past chats for continuity in conversations.
+---
 
-Contextual Uploads: Upload images and PDF files to provide additional context for the AI, enriching the conversation.
+## Setup
 
-Custom Prompts: Ask questions or provide prompts to guide the AI's responses.
+1. **Clone the Repository**
+   ```bash
+   git clone <repository-url>
+   cd <repository-folder>
+   ```
 
-Clear Chat History: Easily clear past chats and start fresh whenever needed.
+2. **Install Dependencies**
+   Ensure you have Python installed (3.7+ recommended). Install required packages using `pip`:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Usage
+3. **API Key Setup**
+   - Set up an `.env` file in the root directory with your API keys. The app uses OpenAI’s API and Neo4j for the knowledge graph.
+   - Add the following variables:
+     ```plaintext
+     OPENAI_API_KEY=your_openai_api_key
+     NEO4J_URI=your_neo4j_uri
+     NEO4J_USERNAME=your_neo4j_username
+     NEO4J_PASSWORD=your_neo4j_password
+     ```
 
-Follow these steps to set up and run the project:
+4. **Run the Application**
+   Start the Streamlit app by running:
+   ```bash
+   streamlit run Home_Page.py
+   ```
 
-1. Install dependencies:
-```
-pip install -r requirements.txt
-```
+---
 
-2. Run the Streamlit server:
-```
-streamlit run app.py
-```
+## Usage
 
-3. Access the application in your browser
+- **AI Tutor**: Type questions into the chat input box. The AI will use past conversations and knowledge graphs to answer in a context-aware manner.
+- **Problem-Code Matching**: Enter a problem description and corresponding code to receive feedback on the code’s logical accuracy.
+- **DS Quiz**: Navigate to the quiz page to answer questions on Data Structures and check your understanding.
+- **Admin Panel**: Access this page to manage chat history and stored data files.
 
+---
+
+## Notes
+
+- The AI Tutor depends on OpenAI’s API, so ensure you have sufficient API quota.
+- Neo4j database connection is used for the knowledge graph. Ensure the connection details are correct and that Neo4j is running if using a local server.
+
+---
