@@ -1,4 +1,5 @@
 # Personalized AI Tutor For Programming
+[![Watch the full video](assets/gif.gif)](https://drive.google.com/file/d/1sLmuOq7y_n6eIZeRGY08vNcTqC7Orspt/view?usp=sharing)
 
 This project is a Streamlit-based application featuring several pages, including an AI Tutor chatbot and a problem-code matching tool. The AI Tutor provides answers to programming-related questions using a knowledge graph and RAG. The Problem-Code Matching tool allows users to input a coding problem and incorrect code for analysis.
 
